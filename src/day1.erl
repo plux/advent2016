@@ -23,11 +23,12 @@ solve_part1(Ops) ->
                                       NewDir = turn(Dir, Turn),
                                       NewPos = lists:last(walk(Pos, NewDir, Steps)),
                                       {NewPos, NewDir}
-                              end, {{0, 0}, north}, Ops),
+
+                              end, {{0, 0}, north()}, Ops),
     abs(X) + abs(Y).
 
 solve_part2(Ops) ->
-    {X, Y} = solve_part2(Ops, {[{0, 0}], north}),
+    {X, Y} = solve_part2(Ops, {[{0, 0}], north()}),
     abs(X) + abs(Y).
 
 solve_part2([{Turn, Steps}|Ops], {[Pos|_] = Visited, Dir}) ->
@@ -48,21 +49,23 @@ has_visited([Pos|Rest], Visited) ->
         false -> has_visited(Rest, Visited)
     end.
 
-turn(north, left)  -> west;
-turn(north, right) -> east;
-turn(east,  left)  -> north;
-turn(east,  right) -> south;
-turn(south, left)  -> east;
-turn(south, right) -> west;
-turn(west,  left)  -> south;
-turn(west,  right) -> north.
+north() ->
+    0.
 
-walk(_, _, 0)              -> [];
-walk({X, Y}, north, Steps) -> [{X, Y-1}|walk({X, Y-1}, north, Steps-1)];
-walk({X, Y}, south, Steps) -> [{X, Y+1}|walk({X, Y+1}, south, Steps-1)];
-walk({X, Y}, west, Steps)  -> [{X-1, Y}|walk({X-1, Y}, west, Steps-1)];
-walk({X, Y}, east, Steps)  -> [{X+1, Y}|walk({X+1, Y}, east, Steps-1)].
+turn(0, Turn)    -> turn(4, Turn);
+turn(Dir, left)  -> (Dir-1) rem 4;
+turn(Dir, right) -> (Dir+1) rem 4.
 
+walk(_, _, 0) ->
+    [];
+walk({X, Y}, Dir, Steps) ->
+    {DX, DY} = lists:nth(Dir+1, directions()),
+    [{X+DX, Y+DY}|walk({X+DX, Y+DY}, Dir, Steps-1)].
+
+directions() ->
+    [{0, -1}, {1, 0}, {0, 1}, {-1, 0}].
+
+%%%_* Tests ============================================================
 -include_lib("eunit/include/eunit.hrl").
 
 day1_test_() ->
