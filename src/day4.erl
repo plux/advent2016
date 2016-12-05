@@ -56,7 +56,7 @@ rot(C)  -> C+1.
 %%%_* Tests ============================================================
 -include_lib("eunit/include/eunit.hrl").
 
-day3_test_() ->
+day4_test_() ->
     Example  = <<"aaaaa-bbb-z-y-x-123[abxyz]\n",
                  "a-b-c-d-e-f-g-h-987[abcde]\n",
                  "not-a-real-room-404[oarel]\n",
