@@ -62,31 +62,40 @@ solve([State|Rest], History) ->
     end.
 
 prune_states(States, History) ->
-    CompStates = [comparable(S) || S <- States],
-    ValidStates = valid_states(CompStates),
-    StatesSet = gb_sets:from_list(ValidStates),
+    ValidStates = valid_states(States),
+    CompStates = [comparable(S) || S <- ValidStates],
+    StatesSet = gb_sets:from_list(CompStates),
     Diff = gb_sets:difference(StatesSet, History),
     PrunedStates = [S || S <- States, gb_sets:is_member(comparable(S), Diff)],
     {Diff, PrunedStates}.
 
 comparable(#{1 := F1, 2 := F2, 3 := F3, 4 := F4, elevator := E}) ->
-    {E, lists:map(fun comparable/1, [F1, F2, F3, F4])};
-comparable(Items0) when is_list(Items0) ->
-    Items = lists:sort(Items0),
-    Chips = [Chip || {chip, Chip} <- Items],
-    Gens = [Gen || {gen, Gen} <- Items],
-    Pairs = [Chip || Chip <- Chips, lists:member(Chip, Gens)],
-    {length(Pairs), Chips -- Pairs, Gens -- Pairs}.
+    Items = enum(1, F1) ++ enum(2, F2) ++ enum(3, F3) ++ enum(4, F4),
+    Chips = lists:sort([{Chip, N} || {chip, Chip, N} <- Items]),
+    Gens = lists:sort([{Gen, N} || {gen, Gen, N} <- Items]),
+    {E, lists:sort(make_pairs(Chips, Gens))}.
+
+make_pairs([], []) ->
+    [];
+make_pairs([{Elem, ChipN}|ChipT], [{Elem, GenN}|GenT]) ->
+    [{ChipN, GenN}|make_pairs(ChipT, GenT)].
+
+enum(N, L) ->
+    [{Type, Elem, N} || {Type, Elem} <- L].
 
 valid_states(States) ->
     lists:filter(fun is_valid/1, States).
 
-is_valid({_, Floors}) ->
-    lists:all(fun is_valid_floor/1, Floors).
+is_valid(#{1 := F1, 2 := F2, 3 := F3, 4 := F4}) ->
+    lists:all(fun is_valid_floor/1, [F1, F2, F3, F4]).
 
-is_valid_floor({_Pairs, [],     _Gens}) -> true;
-is_valid_floor({0,      _Chips, []})    -> true;
-is_valid_floor({_Pairs, _Chips, _Gens}) -> false.
+is_valid_floor(Items) ->
+    case [Gen || {gen, Gen} <- Items] of
+        [] ->
+            true;
+        Gens ->
+            [] =:= [Chip || {chip, Chip} <- Items, not lists:member(Chip, Gens)]
+    end.
 
 make_moves(State) ->
     up_moves(State) ++ down_moves(State).
@@ -142,7 +151,6 @@ day11_test_() ->
                , steps => []
                },
      [ ?_assertEqual(11, length(maps:get(steps, solve(Example))))
-     , {timeout, 60, ?_assertEqual(33, solve_part1())}
-     %% Too slow
-     %% , {timeout, 60, ?_assertEqual(57, solve_part2())}
+     , ?_assertEqual(33, solve_part1())
+     , ?_assertEqual(57, solve_part2())
      ].
