@@ -25,7 +25,8 @@ solve(Salt, N, Rounds, Keys) ->
             end
     end.
 
-find_five(_Salt, _N, _C, 0, _Rounds) -> false;
+find_five(_Salt, _N, _C, 0, _Rounds) ->
+    false;
 find_five(Salt, N, C, I, Rounds) ->
     Md5 = md5_stretch(Salt, N, Rounds),
     case five(Md5, C) of
@@ -43,13 +44,14 @@ five([_|Rest], A)      -> five(Rest, A).
 
 md5_stretch(Salt, N, I) ->
     Str = Salt ++ integer_to_list(N),
-    K = list_to_binary("stretch_" ++ integer_to_list(I) ++ "_" ++ Str),
-    case get(K) of
+    Key = integer_to_list(I) ++ "_" ++ Str,
+    case get(Key) of
         undefined ->
             Res = md5_stretch(Str, I),
-            put(K, list_to_binary(Res)),
+            put(Key, Res),
             Res;
-        Md5 -> binary_to_list(Md5)
+        Md5 ->
+            Md5
     end.
 
 md5_stretch(Str, 0) -> Str;
