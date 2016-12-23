@@ -81,4 +81,5 @@ day23_test_() ->
               ],
     [ ?_assertMatch(#{"a" := 3}, solve(Example, #{}))
     , ?_assertMatch(#{"a" := 12000}, solve_part1())
+    , ?_assertMatch(#{"a" := 479008560}, solve_part2())
     ].
